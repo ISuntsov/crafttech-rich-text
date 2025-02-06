@@ -1,18 +1,31 @@
-import { useState } from "react";
+import { useState, useCallback, RefObject, memo } from "react";
 import { Layer, Stage } from "react-konva";
+import Konva from "konva";
+
 import Shape from "../shape/Shape";
+import { Figure, Tool } from "../../types";
+import { KonvaEventObject } from "konva/lib/Node";
 
-const Canvas = ({ tool, stageRef }: any) => {
-  const [figures, setFigures] = useState<any>([]);
+interface CanvasProps {
+  tool: Tool;
+  stageRef: RefObject<Konva.Stage>;
+}
 
-  const handleOnClick = (e: any) => {
-    if (tool === "cursor") return;
-    const stage = e.target.getStage();
-    const stageOffset = stage.absolutePosition();
-    const point = stage.getPointerPosition();
-    setFigures((prev: any) => [
-      ...prev,
-      {
+const Canvas = ({ tool, stageRef }: CanvasProps) => {
+  const [figures, setFigures] = useState<Figure[]>([]);
+
+  const handleOnClick = useCallback(
+    (e: KonvaEventObject<MouseEvent>) => {
+      if (tool === "cursor") return;
+
+      const stage = e.target.getStage();
+      if (!stage) return;
+
+      const point = stage.getPointerPosition();
+      const stageOffset = stage.absolutePosition();
+      if (!point || !stageOffset) return;
+
+      const newFigure: Figure = {
         id: Date.now().toString(36),
         width: 100,
         height: 100,
@@ -21,9 +34,25 @@ const Canvas = ({ tool, stageRef }: any) => {
         y: point.y - stageOffset.y,
         html: "",
         text: "",
-      },
-    ]);
-  };
+        textStyles: {
+          fontWeight: "normal",
+          fontSize: 16,
+          color: "#000000",
+        },
+      };
+
+      setFigures((prev) => [...prev, newFigure]);
+    },
+    [tool]
+  );
+
+  const handleUpdateFigure = useCallback((updatedFigure: Figure) => {
+    setFigures((prev) =>
+      prev.map((figure) =>
+        figure.id === updatedFigure.id ? updatedFigure : figure
+      )
+    );
+  }, []);
 
   return (
     <Stage
@@ -31,15 +60,19 @@ const Canvas = ({ tool, stageRef }: any) => {
       height={window.innerHeight}
       draggable={tool === "cursor"}
       onClick={handleOnClick}
-      ref={stageRef}
-    >
+      ref={stageRef}>
       <Layer>
-        {figures.map((figure: any, i: number) => {
-          return <Shape key={i} {...figure} stageRef={stageRef} tool={tool} />;
-        })}
+        {figures.map((figure) => (
+          <Shape
+            key={figure.id}
+            figure={figure}
+            tool={tool}
+            onUpdate={handleUpdateFigure}
+          />
+        ))}
       </Layer>
     </Stage>
   );
 };
 
-export default Canvas;
+export default memo(Canvas);

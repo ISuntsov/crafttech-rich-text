@@ -1,0 +1,9 @@
+.shape {
+  &:hover {
+    cursor: pointer;
+
+    .rect {
+      stroke-width: 2px;
+    }
+  }
+}

@@ -1,6 +1,14 @@
-const Control = ({ tool, setTool }: any) => {
-  const handleOnChange = (e: any) => {
-    setTool(e.target.value);
+import { ChangeEvent, memo } from "react";
+import { Tool } from "../../types";
+
+interface ControlProps {
+  tool: Tool;
+  onToolChange: (tool: Tool) => void;
+}
+
+const Control = ({ tool, onToolChange }: ControlProps) => {
+  const handleToolChange = (e: ChangeEvent<HTMLInputElement>) => {
+    onToolChange(e.target.value as Tool);
   };
 
   return (
@@ -12,7 +20,7 @@ const Control = ({ tool, setTool }: any) => {
           name="control"
           value="cursor"
           checked={tool === "cursor"}
-          onChange={handleOnChange}
+          onChange={handleToolChange}
         />
         <label htmlFor="cursor">Взаимодействие</label>
       </div>
@@ -24,7 +32,7 @@ const Control = ({ tool, setTool }: any) => {
           name="control"
           value="shape"
           checked={tool === "shape"}
-          onChange={handleOnChange}
+          onChange={handleToolChange}
         />
         <label htmlFor="shape">Добавление</label>
       </div>
@@ -32,4 +40,4 @@ const Control = ({ tool, setTool }: any) => {
   );
 };
 
-export default Control;
+export default memo(Control);
